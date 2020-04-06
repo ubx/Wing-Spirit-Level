@@ -26,6 +26,10 @@ float accX = 0.0F;
 float accY = 0.0F;
 float accZ = 0.0F;
 
+float pitch_diff = 0.0F;
+float pitch_diff_set = 5.0F;  // todo -- read from NVM
+
+
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     //Serial.println(WiFi.macAddress());
@@ -41,13 +45,13 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     float pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     //float roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     M5.Lcd.setCursor(0, 80);
-    float pitch_diff = (pitch - message.pitch);
+    pitch_diff = pitch - message.pitch - pitch_diff_set;
     M5.Lcd.printf("pitch_diff: %5.2f", pitch_diff);
-    if (pitch_diff > 5.0) {
+    if (pitch_diff  > 5.0F) {
         out->begin();
         sam->Say(out, "Lower!");
         out->stop();
-    } else if (pitch_diff < -5.0) {
+    } else if (pitch_diff < -5.0F) {
         out->begin();
         sam->Say(out, "Higher!");
         out->stop();
@@ -87,7 +91,9 @@ void setup() {
 
 void loop() {
     M5.update();
-    if (M5.BtnA.wasReleased(500)) {
+    if (M5.BtnA.wasReleased()) {
+        // todo -- make persistent: wirte to NVM
+        pitch_diff_set = pitch_diff;
         out->begin();
         sam->Say(out, "Set!");
         out->stop();
