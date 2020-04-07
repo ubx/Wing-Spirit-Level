@@ -108,7 +108,7 @@ void setup() {
 
 void loop() {
     M5.update();
-    if (M5.BtnA.wasReleased()) {
+    if (M5.BtnA.pressedFor(1000)) {
         pitch_diff_set = pitch_diff;
         set_pitch_diff_set(pitch_diff_set);
         out->begin();
