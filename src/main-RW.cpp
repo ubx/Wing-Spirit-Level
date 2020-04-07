@@ -11,6 +11,8 @@
 #include "ArduinoNvs.h"
 
 #define D180 180.0
+#define ROL_TOLERANC 30.0F
+#define PITCH_TOLERANCE 5.0F
 
 AudioOutputI2S *out = nullptr;
 auto *sam = new ESP8266SAM;
@@ -58,12 +60,12 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     M5.Lcd.printf("pitch_diff:     %5.2f", pitch_diff);
     M5.Lcd.setCursor(0, 100);
     M5.Lcd.printf("pitch_diff set: %5.2f", pitch_diff_set);
-    if (roll > -30.0F && roll < 30.0F) {
-        if (diff > 5.0F) {
+    if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC && message.roll < ROL_TOLERANC) {
+        if (diff > PITCH_TOLERANCE) {
             out->begin();
             sam->Say(out, "Lower!");
             out->stop();
-        } else if (diff < -5.0F) {
+        } else if (diff < -PITCH_TOLERANCE) {
             out->begin();
             sam->Say(out, "Higher!");
             out->stop();
