@@ -8,14 +8,9 @@
 #include "message_def.h"
 #include <ESP8266SAM.h>  //https://github.com/earlephilhower/ESP8266SAM
 #include <AudioOutputI2S.h>  //https://github.com/earlephilhower/ESP8266Audio
-
-
-#define DISPLAY_RAW
+#include "ArduinoNvs.h"
 
 #define D180 180.0
-
-
-#define DISPLAY_RAW
 
 AudioOutputI2S *out = nullptr;
 auto *sam = new ESP8266SAM;
@@ -26,9 +21,22 @@ float accX = 0.0F;
 float accY = 0.0F;
 float accZ = 0.0F;
 
-float pitch_diff = 0.0F;
-float pitch_diff_set = 5.0F;  // todo -- read from NVM
 
+void set_pitch_diff_set(float val) {
+    NVS.setFloat("pitch", val);
+}
+
+float get_pitch_diff_set() {
+    auto val = NVS.getFloat("pitch");
+    if (val == 0) {
+        val = 0.0F;
+        set_pitch_diff_set(val);
+    }
+    return val;
+}
+
+float pitch_diff = 0.0F;
+float pitch_diff_set = 0.0F;
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
@@ -47,8 +55,10 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     pitch_diff = pitch - message.pitch;
     float diff = pitch_diff - pitch_diff_set;
     M5.Lcd.setCursor(0, 80);
-    M5.Lcd.printf("pitch_diff: %5.2f", pitch_diff);
-    if ((roll > -30.0F) && (roll < 30.0F and 1)) {
+    M5.Lcd.printf("pitch_diff:     %5.2f", pitch_diff);
+    M5.Lcd.setCursor(0, 100);
+    M5.Lcd.printf("pitch_diff set: %5.2f", pitch_diff_set);
+    if (roll > -30.0F && roll < 30.0F) {
         if (diff > 5.0F) {
             out->begin();
             sam->Say(out, "Lower!");
@@ -88,15 +98,19 @@ void setup() {
     M5.Lcd.setTextSize(4);
     M5.Lcd.print("Right Wing");
     M5.Lcd.setTextSize(2);
-    out = new AudioOutputI2S(0, 1, 32);
+    M5.Lcd.setCursor(50, 220);
+    M5.Lcd.print("SET");
 
+    out = new AudioOutputI2S(0, 1, 32);
+    NVS.begin();
+    pitch_diff_set = get_pitch_diff_set();
 }
 
 void loop() {
     M5.update();
     if (M5.BtnA.wasReleased()) {
-        // todo -- make persistent: wirte to NVM
         pitch_diff_set = pitch_diff;
+        set_pitch_diff_set(pitch_diff_set);
         out->begin();
         sam->Say(out, "Set!");
         out->stop();
