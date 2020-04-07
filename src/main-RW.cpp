@@ -11,6 +11,7 @@
 
 #define D180 180.0
 #define ROL_TOLERANC 30.0F
+#define PITCH_TOLERANCE 1.0F
 
 struct_message message;
 
@@ -56,7 +57,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     M5.Lcd.setCursor(0, 100);
     M5.Lcd.printf("pitch_diff set: %5.3f", pitch_diff_set);
     if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC && message.roll < ROL_TOLERANC) {
-        Say(diff);
+        Say(diff, PITCH_TOLERANCE);
     }
 }
 
@@ -94,6 +95,7 @@ void setup() {
     M5.Lcd.print("OFF");
 
     NVS.begin();
+    M5.Speaker.setVolume(1);  // todo -- doesn't work!
     pitch_diff_set = get_pitch_diff_set();
 }
 
