@@ -67,6 +67,8 @@ void setup() {
     M5.Lcd.setTextSize(4);
     M5.Lcd.print("Left Wing");
     M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(240, 220);
+    M5.Lcd.print("OFF");
 }
 
 void loop() {
@@ -95,6 +97,11 @@ void loop() {
         Serial.println("Sent with success");
     } else {
         Serial.println("Error sending the data");
+    }
+
+    M5.update();
+    if (M5.BtnC.pressedFor(5000)) {
+        M5.Power.deepSleep();
     }
 
     delay(500);

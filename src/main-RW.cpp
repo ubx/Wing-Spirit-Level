@@ -100,6 +100,8 @@ void setup() {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(50, 220);
     M5.Lcd.print("SET");
+    M5.Lcd.setCursor(240, 220);
+    M5.Lcd.print("OFF");
 
     out = new AudioOutputI2S(0, 1, 32);
     NVS.begin();
@@ -114,5 +116,7 @@ void loop() {
         out->begin();
         sam->Say(out, "Set!");
         out->stop();
+    } else if (M5.BtnC.pressedFor(5000)) {
+        M5.Power.deepSleep();
     }
 }
