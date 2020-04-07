@@ -43,19 +43,21 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 #endif
     //float yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     float pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
-    //float roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    M5.Lcd.setCursor(0, 80);
+    float roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     pitch_diff = pitch - message.pitch;
     float diff = pitch_diff - pitch_diff_set;
+    M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("pitch_diff: %5.2f", pitch_diff);
-    if (diff > 5.0F) {
-        out->begin();
-        sam->Say(out, "Lower!");
-        out->stop();
-    } else if (diff < -5.0F) {
-        out->begin();
-        sam->Say(out, "Higher!");
-        out->stop();
+    if ((roll > -30.0F) && (roll < 30.0F and 1)) {
+        if (diff > 5.0F) {
+            out->begin();
+            sam->Say(out, "Lower!");
+            out->stop();
+        } else if (diff < -5.0F) {
+            out->begin();
+            sam->Say(out, "Higher!");
+            out->stop();
+        }
     }
 }
 
