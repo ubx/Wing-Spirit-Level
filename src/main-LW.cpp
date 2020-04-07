@@ -52,6 +52,7 @@ void setup() {
     }
 
     M5.IMU.Init();
+    M5.IMU.setAccelFsr(M5.IMU.AFS_4G); // 200Q sensor, ±4g
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setTextColor(GREEN, BLACK);
     M5.Lcd.setCursor(0, 0);

@@ -52,9 +52,9 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     pitch_diff = pitch - message.pitch;
     float diff = pitch_diff - pitch_diff_set;
     M5.Lcd.setCursor(0, 80);
-    M5.Lcd.printf("pitch_diff:     %5.2f", pitch_diff);
+    M5.Lcd.printf("pitch_diff:     %5.3f", pitch_diff);
     M5.Lcd.setCursor(0, 100);
-    M5.Lcd.printf("pitch_diff set: %5.2f", pitch_diff_set);
+    M5.Lcd.printf("pitch_diff set: %5.3f", pitch_diff_set);
     if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC && message.roll < ROL_TOLERANC) {
         Say(diff);
     }
@@ -81,6 +81,7 @@ void setup() {
     esp_now_register_recv_cb(OnDataRecv);
 
     M5.IMU.Init();
+    M5.IMU.setAccelFsr(M5.IMU.AFS_2G);  // MPU6886 sensor, ±2g
     M5.Lcd.fillScreen(BLACK);
     M5.Lcd.setTextColor(GREEN, BLACK);
     M5.Lcd.setCursor(0, 0);
