@@ -6,16 +6,11 @@
 #include <WiFi.h>
 #include <cmath>
 #include "message_def.h"
-#include <ESP8266SAM.h>  //https://github.com/earlephilhower/ESP8266SAM
-#include <AudioOutputI2S.h>  //https://github.com/earlephilhower/ESP8266Audio
 #include "ArduinoNvs.h"
+#include "audio.h"
 
 #define D180 180.0
 #define ROL_TOLERANC 30.0F
-#define PITCH_TOLERANCE 5.0F
-
-AudioOutputI2S *out = nullptr;
-auto *sam = new ESP8266SAM;
 
 struct_message message;
 
@@ -61,15 +56,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     M5.Lcd.setCursor(0, 100);
     M5.Lcd.printf("pitch_diff set: %5.2f", pitch_diff_set);
     if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC && message.roll < ROL_TOLERANC) {
-        if (diff > PITCH_TOLERANCE) {
-            out->begin();
-            sam->Say(out, "Lower!");
-            out->stop();
-        } else if (diff < -PITCH_TOLERANCE) {
-            out->begin();
-            sam->Say(out, "Higher!");
-            out->stop();
-        }
+        Say(diff);
     }
 }
 
@@ -105,7 +92,6 @@ void setup() {
     M5.Lcd.setCursor(240, 220);
     M5.Lcd.print("OFF");
 
-    out = new AudioOutputI2S(0, 1, 32);
     NVS.begin();
     pitch_diff_set = get_pitch_diff_set();
 }
@@ -115,9 +101,7 @@ void loop() {
     if (M5.BtnA.pressedFor(1000)) {
         pitch_diff_set = pitch_diff;
         set_pitch_diff_set(pitch_diff_set);
-        out->begin();
-        sam->Say(out, "Set!");
-        out->stop();
+        Say("Set!");
     } else if (M5.BtnC.pressedFor(5000)) {
         M5.Power.deepSleep();
     }
