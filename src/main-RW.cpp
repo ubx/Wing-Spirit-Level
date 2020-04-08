@@ -13,10 +13,6 @@
 
 struct_message message;
 
-float yaw;
-float pitch;
-float roll;
-
 bool do_sound = true;
 
 void set_pitch_diff_set(float val) {
@@ -45,11 +41,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
+
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
+    M5.Lcd.printf(" %5.3f   %5.3f   %5.3f", accX, accY, accZ);
 #endif
-    M5.IMU.getAhrsData(&pitch, &roll, &yaw);
+    float yaw;
+    float pitch;
+    float roll;
+    //M5.IMU.getAhrsData(&pitch, &roll, &yaw);
+    yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
+    pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
+    roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     wing_diff = pitch - message.pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
@@ -57,7 +60,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
             message.roll < ROL_TOLERANC) {
-            Say(wing_diff_set - wing_diff, WING_TOLERANCE);
+            Say(wing_diff - wing_diff_set, WING_TOLERANCE);
         }
     }
 }
