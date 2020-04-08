@@ -5,6 +5,7 @@
 #ifndef WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 #define WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 
+#define DISPLAY_RAW
 
 typedef struct {
     float pitch;

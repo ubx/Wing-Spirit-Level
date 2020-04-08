@@ -46,6 +46,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     // Display our sensor data
 
 #ifdef DISPLAY_RAW
+    M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
 #endif
