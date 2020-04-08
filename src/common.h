@@ -4,6 +4,8 @@
 
 #ifndef WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 #define WING_SPIRIT_LEVEL_MESSAGE_DIF_H
+
+
 typedef struct {
     float pitch;
     float roll;

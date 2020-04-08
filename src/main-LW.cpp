@@ -5,7 +5,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <cmath>
-#include "message_def.h"
+#include "common.h"
 
 #define D180 180.0
 
