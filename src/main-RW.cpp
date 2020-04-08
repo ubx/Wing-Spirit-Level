@@ -19,6 +19,7 @@ float accX = 0.0F;
 float accY = 0.0F;
 float accZ = 0.0F;
 
+bool do_sound = true;
 
 void set_pitch_diff_set(float val) {
     NVS.setFloat("pitch", val);
@@ -59,12 +60,14 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 //    M5.Lcd.setCursor(0, 100);
 //    M5.Lcd.printf("pitch_diff set: %5.3f", pitch_diff_set);
 
-    M5.Lcd.setTextSize(68);
+    M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     M5.Lcd.printf("%5.3f    ", pitch_diff_set - pitch_diff);
-
-    if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC && message.roll < ROL_TOLERANC) {
-        Say(diff, PITCH_TOLERANCE);
+    if (do_sound) {
+        if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
+            message.roll < ROL_TOLERANC) {
+            Say(diff, PITCH_TOLERANCE);
+        }
     }
 }
 
@@ -98,6 +101,8 @@ void setup() {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(50, 220);
     M5.Lcd.print("SET");
+    M5.Lcd.setCursor(135, 220);
+    M5.Lcd.print(do_sound ? "S-OFF" : "S-ON");
     M5.Lcd.setCursor(240, 220);
     M5.Lcd.print("OFF");
 
@@ -108,10 +113,16 @@ void setup() {
 
 void loop() {
     M5.update();
-    if (M5.BtnA.pressedFor(1000)) {
+    if (M5.BtnA.wasReleased()) {
         pitch_diff_set = pitch_diff;
         set_pitch_diff_set(pitch_diff_set);
         Say("Set!");
+    } else if (M5.BtnB.wasReleased()) {
+        do_sound = !do_sound;
+        M5.Lcd.setTextSize(2);
+        M5.Lcd.setCursor(135, 220);
+        M5.Lcd.print(do_sound ? "S-OFF" : "S-ON ");
+        Say();
     } else if (M5.BtnC.pressedFor(5000)) {
         M5.Power.deepSleep();
     }
