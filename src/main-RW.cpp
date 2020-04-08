@@ -9,7 +9,7 @@
 #include "audio.h"
 
 #define ROL_TOLERANC 30.0F
-#define PITCH_TOLERANCE 1.0F
+#define WING_TOLERANCE 1.0F
 
 struct_message message;
 
@@ -32,8 +32,8 @@ float get_pitch_diff_set() {
     return val;
 }
 
-float pitch_diff = 0.0F;
-float pitch_diff_set = 0.0F;
+float wing_diff = 0.0F;
+float wing_diff_set = 0.0F;
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
@@ -50,14 +50,14 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
 #endif
     M5.IMU.getAhrsData(&pitch, &roll, &yaw);
-    pitch_diff = pitch - message.pitch;
+    wing_diff = pitch - message.pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
-    M5.Lcd.printf("%5.3f    ", pitch_diff_set - pitch_diff);
+    M5.Lcd.printf("%5.3f    ", wing_diff_set - wing_diff);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
             message.roll < ROL_TOLERANC) {
-            Say(pitch_diff - pitch_diff_set, PITCH_TOLERANCE);
+            Say(wing_diff_set - wing_diff, WING_TOLERANCE);
         }
     }
 }
@@ -99,14 +99,14 @@ void setup() {
 
     NVS.begin();
     M5.Speaker.setVolume(1);  // todo -- doesn't work!
-    pitch_diff_set = get_pitch_diff_set();
+    wing_diff_set = get_pitch_diff_set();
 }
 
 void loop() {
     M5.update();
     if (M5.BtnA.wasReleased()) {
-        pitch_diff_set = pitch_diff;
-        set_pitch_diff_set(pitch_diff_set);
+        wing_diff_set = wing_diff;
+        set_pitch_diff_set(wing_diff_set);
         Say("Set!");
     } else if (M5.BtnB.wasReleased()) {
         do_sound = !do_sound;
