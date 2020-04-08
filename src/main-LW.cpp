@@ -4,18 +4,11 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <cmath>
 #include "common.h"
-
-#define D180 180.0
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
-
-float accX = 0.0F;
-float accY = 0.0F;
-float accZ = 0.0F;
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
@@ -64,15 +57,15 @@ void setup() {
 }
 
 void loop() {
-    M5.IMU.getAccelData(&accX, &accY, &accZ);
-
 #ifdef DISPLAY_RAW
+    float accX;
+    float accY;
+    float accZ;
+    M5.IMU.getAccelData(&accX, &accY, &accZ);
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
 #endif
-    message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
-    message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
+    M5.IMU.getAhrsData(&message.pitch, &message.roll, &message.yaw);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);

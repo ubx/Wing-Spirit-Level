@@ -4,20 +4,18 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <cmath>
 #include "common.h"
 #include "ArduinoNvs.h"
 #include "audio.h"
 
-#define D180 180.0
 #define ROL_TOLERANC 30.0F
 #define PITCH_TOLERANCE 1.0F
 
 struct_message message;
 
-float accX = 0.0F;
-float accY = 0.0F;
-float accZ = 0.0F;
+float yaw;
+float pitch;
+float roll;
 
 bool do_sound = true;
 
@@ -42,32 +40,24 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     //Serial.println(WiFi.macAddress());
     memcpy(&message, incomingData, sizeof(message));
 
-    M5.IMU.getAccelData(&accX, &accY, &accZ);
-    // Display our sensor data
-
 #ifdef DISPLAY_RAW
+    float accX;
+    float accY;
+    float accZ;
+    M5.IMU.getAccelData(&accX, &accY, &accZ);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
 #endif
-    //float yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    float pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
-    float roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
+    M5.IMU.getAhrsData(&pitch, &roll, &yaw);
     pitch_diff = pitch - message.pitch;
-    float diff = pitch_diff - pitch_diff_set;
-//    M5.Lcd.setTextSize(2);
-//    M5.Lcd.setCursor(0, 80);
-//    M5.Lcd.printf("pitch_diff:     %5.3f", pitch_diff);
-//    M5.Lcd.setCursor(0, 100);
-//    M5.Lcd.printf("pitch_diff set: %5.3f", pitch_diff_set);
-
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     M5.Lcd.printf("%5.3f    ", pitch_diff_set - pitch_diff);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
             message.roll < ROL_TOLERANC) {
-            Say(diff, PITCH_TOLERANCE);
+            Say(pitch_diff - pitch_diff_set, PITCH_TOLERANCE);
         }
     }
 }
