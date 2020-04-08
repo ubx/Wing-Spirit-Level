@@ -63,9 +63,12 @@ void loop() {
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
     M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" %5.2f   %5.2f   %5.2f", accX, accY, accZ);
+    M5.Lcd.printf(" %5.3f   %5.3f   %5.3f", accX, accY, accZ);
 #endif
-    M5.IMU.getAhrsData(&message.pitch, &message.roll, &message.yaw);
+    //M5.IMU.getAhrsData(&message.pitch, &message.roll, &message.yaw);
+    message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
+    message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
+    message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);

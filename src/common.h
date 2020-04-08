@@ -6,6 +6,7 @@
 #define WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 
 #define DISPLAY_RAW
+#define D180 180.0
 
 typedef struct {
     float pitch;
