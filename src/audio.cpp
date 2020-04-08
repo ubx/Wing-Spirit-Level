@@ -33,10 +33,8 @@ void Say(const char *str) {
 #else
 
 void Say(float roll_diff, float roll_torerance) {
-    if (roll_diff > roll_torerance) {
-        M5.Speaker.tone(3000, 100);
-    } else if (roll_diff < -roll_torerance) {
-        M5.Speaker.tone(1500, 100);
+    if (abs(roll_diff) > 0.3) {
+        M5.Speaker.tone(1500 + (roll_diff / roll_torerance * 100), 10);
     }
 }
 
