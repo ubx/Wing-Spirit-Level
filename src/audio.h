@@ -9,6 +9,6 @@
 
 void Say(float roll, float roll_torerance);
 
-void Say(const char *str);
+void Say(const char *str = "");
 
 #endif //WING_SPIRIT_LEVEL_AUDIO_H
