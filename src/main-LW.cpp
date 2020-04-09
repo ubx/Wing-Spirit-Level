@@ -4,17 +4,14 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Kalman.h>
+#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include "common.h"
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
 
-uint32_t timer;
-float dt;
-
-Kalman kalmanY;
+Ewma filter(ALPHA);
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
@@ -63,17 +60,10 @@ void setup() {
 }
 
 void loop() {
-    dt = float((micros() - timer) / 1000000); //
-    timer = micros();
     float accX;
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
-
-    float gyroX;
-    float gyroY;
-    float gyroZ;
-    M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
 
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
@@ -82,8 +72,7 @@ void loop() {
     message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.kalAngleY = kalmanY.getAngle(message.pitch, gyroY / 131.0F, dt);
-
+    message.filtered_pitch = filter.filter(message.pitch);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);
@@ -104,5 +93,5 @@ void loop() {
         M5.Power.deepSleep();
     }
 
-    delay(500);
+    delay(250);
 }

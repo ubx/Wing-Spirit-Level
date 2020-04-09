@@ -4,7 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Kalman.h>
+#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include "common.h"
 #include "ArduinoNvs.h"
 #include "audio.h"
@@ -32,17 +32,10 @@ float get_pitch_diff_set() {
 float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
-uint32_t timer;
-float dt;
-
-Kalman kalmanY;
-
+Ewma filter(ALPHA);
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
-    dt = float((micros() - timer) / 1000000); //
-    timer = micros();
-
     //Serial.println(WiFi.macAddress());
     memcpy(&message, incomingData, sizeof(message));
 
@@ -50,11 +43,6 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
-
-    float gyroX;
-    float gyroY;
-    float gyroZ;
-    M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
 
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
@@ -67,11 +55,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-
-    float kalAngleY = kalmanY.getAngle(pitch, gyroY / 131.0F, dt);
-    //Serial.printf("kalAngleY=%7.2f\n", kalAngleY);
-
-    wing_diff = kalAngleY - message.kalAngleY;
+    wing_diff = filter.filter(pitch) - message.filtered_pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     float dif = wing_diff - wing_diff_set;
