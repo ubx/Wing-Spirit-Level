@@ -5,6 +5,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <Ewma.h> // https://github.com/jonnieZG/EWMA
+#include <esp_wifi.h>
 #include "common.h"
 
 // REPLACE WITH YOUR RECEIVER MAC Address
@@ -26,7 +27,6 @@ void setup() {
     M5.Power.begin();
 
     WiFi.mode(WIFI_STA);
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
     // Init ESP-NOW
     if (esp_now_init() != ESP_OK) {
