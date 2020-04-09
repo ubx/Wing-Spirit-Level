@@ -113,7 +113,10 @@ void loop() {
     if (M5.BtnA.wasReleased()) {
         wing_diff_set = wing_diff;
         set_pitch_diff_set(wing_diff_set);
-        Say("Set!");
+        Say();
+    } else if (M5.BtnA.pressedFor(10000)) { // reset to 0.0 !
+        set_pitch_diff_set(0.0F);
+        Say();
     } else if (M5.BtnB.wasReleased()) {
         do_sound = !do_sound;
         M5.Lcd.setTextSize(2);
@@ -123,4 +126,5 @@ void loop() {
     } else if (M5.BtnC.pressedFor(5000)) {
         M5.Power.deepSleep();
     }
+
 }
