@@ -12,7 +12,7 @@ uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
 
 uint32_t timer;
-double dt;
+float dt;
 
 Kalman kalmanY;
 
@@ -63,7 +63,7 @@ void setup() {
 }
 
 void loop() {
-    dt = (double) (micros() - timer) / 1000000;
+    dt = float((micros() - timer) / 1000000); //
     timer = micros();
     float accX;
     float accY;
@@ -82,7 +82,7 @@ void loop() {
     message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.kalAngleY = kalmanY.getAngle(message.pitch, gyroY / 131.0, dt);
+    message.kalAngleY = kalmanY.getAngle(message.pitch, gyroY / 131.0F, dt);
 
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);

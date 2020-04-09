@@ -33,14 +33,14 @@ float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
 uint32_t timer;
-double dt;
+float dt;
 
 Kalman kalmanY;
 
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
-    dt = (double) (micros() - timer) / 1000000; //
+    dt = float((micros() - timer) / 1000000); //
     timer = micros();
 
     //Serial.println(WiFi.macAddress());
@@ -68,17 +68,18 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
 
-    float kalAngleY = kalmanY.getAngle(pitch, gyroY / 131.0, dt);
+    float kalAngleY = kalmanY.getAngle(pitch, gyroY / 131.0F, dt);
     //Serial.printf("kalAngleY=%7.2f\n", kalAngleY);
 
     wing_diff = kalAngleY - message.kalAngleY;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
-    M5.Lcd.printf("%+03.3f    ", wing_diff_set - wing_diff);
+    float dif = wing_diff - wing_diff_set;
+    M5.Lcd.printf("%+03.3f    ", dif);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
             message.roll < ROL_TOLERANC) {
-            Say(wing_diff - wing_diff_set, WING_TOLERANCE);
+            Say(dif, WING_TOLERANCE);
         }
     }
 }
