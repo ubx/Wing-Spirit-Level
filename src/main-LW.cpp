@@ -4,11 +4,17 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <Kalman.h>
 #include "common.h"
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
+
+uint32_t timer;
+double dt;
+
+Kalman kalmanY;
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
@@ -57,18 +63,27 @@ void setup() {
 }
 
 void loop() {
-#ifdef DISPLAY_RAW
+    dt = (double) (micros() - timer) / 1000000;
+    timer = micros();
     float accX;
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
+
+    float gyroX;
+    float gyroY;
+    float gyroZ;
+    M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
+
     M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" %5.3f   %5.3f   %5.3f", accX, accY, accZ);
-#endif
+    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
+
     //M5.IMU.getAhrsData(&message.pitch, &message.roll, &message.yaw);
     message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
+    message.kalAngleY = kalmanY.getAngle(message.pitch, gyroY / 131.0, dt);
+
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);
