@@ -4,6 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <Kalman.h>
 #include "common.h"
 #include "ArduinoNvs.h"
 #include "audio.h"
@@ -31,21 +32,34 @@ float get_pitch_diff_set() {
 float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
+uint32_t timer;
+double dt;
+
+Kalman kalmanY;
+
+
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
+    dt = (double) (micros() - timer) / 1000000; //
+    timer = micros();
+
     //Serial.println(WiFi.macAddress());
     memcpy(&message, incomingData, sizeof(message));
 
-#ifdef DISPLAY_RAW
     float accX;
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
 
+    float gyroX;
+    float gyroY;
+    float gyroZ;
+    M5.IMU.getGyroData(&gyroX, &gyroY, &gyroZ);
+
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" %5.3f   %5.3f   %5.3f", accX, accY, accZ);
-#endif
+    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
+
     float yaw;
     float pitch;
     float roll;
@@ -53,10 +67,14 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    wing_diff = pitch - message.pitch;
+
+    float kalAngleY = kalmanY.getAngle(pitch, gyroY / 131.0, dt);
+    //Serial.printf("kalAngleY=%7.2f\n", kalAngleY);
+
+    wing_diff = kalAngleY - message.kalAngleY;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
-    M5.Lcd.printf("%5.3f    ", wing_diff_set - wing_diff);
+    M5.Lcd.printf("%+03.3f    ", wing_diff_set - wing_diff);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
             message.roll < ROL_TOLERANC) {
@@ -101,7 +119,7 @@ void setup() {
     M5.Lcd.print("OFF");
 
     NVS.begin();
-    M5.Speaker.setVolume(1);  // todo -- doesn't work!
+    //M5.Speaker.setVolume(1);  // todo -- doesn't work!
     wing_diff_set = get_pitch_diff_set();
 }
 
