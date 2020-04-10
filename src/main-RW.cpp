@@ -112,6 +112,7 @@ void setup() {
     M5.Lcd.print(do_sound ? "S-OFF" : "S-ON");
     M5.Lcd.setCursor(240, 220);
     M5.Lcd.print("OFF");
+    M5.Lcd.setBrightness(50);
 
     NVS.begin();
     //M5.Speaker.setVolume(1);  // todo -- doesn't work!

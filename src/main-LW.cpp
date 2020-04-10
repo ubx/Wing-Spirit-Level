@@ -57,6 +57,7 @@ void setup() {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(240, 220);
     M5.Lcd.print("OFF");
+    M5.Lcd.setBrightness(50);
 }
 
 void loop() {
