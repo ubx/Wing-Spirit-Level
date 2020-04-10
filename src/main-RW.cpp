@@ -14,14 +14,21 @@
 
 struct_message message;
 
+
 bool do_sound = true;
 
+void display_error(int e_num) {
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 220);
+    M5.Lcd.printf("E%d", e_num);
+}
+
 void set_pitch_diff_set(float val) {
-    NVS.setFloat("pitch", val);
+    if (!NVS.setFloat("pitch", val)) display_error(1);
 }
 
 float get_pitch_diff_set() {
-    auto val = NVS.getFloat("pitch");
+    float val = NVS.getFloat("pitch");
     if (val == 0) {
         val = 0.0F;
         set_pitch_diff_set(val);
@@ -55,7 +62,10 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
     pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
     roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    wing_diff = filter.filter(pitch) - message.filtered_pitch;
+    float fp = filter.filter(pitch);
+    if (isnan(fp)) display_error(2);
+    if (isnan(message.filtered_pitch)) display_error(3);
+    wing_diff = fp - message.filtered_pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     float dif = wing_diff - wing_diff_set;
