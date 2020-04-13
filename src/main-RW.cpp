@@ -4,7 +4,8 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Ewma.h> // https://github.com/jonnieZG/EWMA
+#include <SingleEMAFilterLib.h> // https://github.com/luisllamasbinaburo/Arduino-SingleEmaFilter
+#include <Queue.h> // https://github.com/EinarArnason/ArduinoQueue
 #include "common.h"
 #include "ArduinoNvs.h"
 #include "audio.h"
@@ -12,8 +13,13 @@
 #define ROL_TOLERANC 30.0F
 #define WING_TOLERANCE 1.0F
 
-struct_message message;
-
+typedef struct {
+    struct_message other_msg;
+    float accX;
+    float accY;
+    float accZ;
+} queu_element;
+DataQueue<queu_element> queue(2);
 
 bool do_sound = true;
 
@@ -39,40 +45,65 @@ float get_pitch_diff_set() {
 float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
-Ewma filter(ALPHA);
+SingleEMAFilter<float> filter(ALPHA);
+
+void displayDate(const queu_element &qe);
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
     //Serial.println(WiFi.macAddress());
-    memcpy(&message, incomingData, sizeof(message));
+    queu_element qe;
+    memcpy(&qe.other_msg, incomingData, len);
+    M5.IMU.getAccelData(&qe.accX, &qe.accY, &qe.accZ);
+    queue.enqueue(qe);
+}
 
-    float accX;
-    float accY;
-    float accZ;
-    M5.IMU.getAccelData(&accX, &accY, &accZ);
-
+void displayDate(const queu_element &qe) {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
+    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", qe.accX, qe.accY, qe.accZ);
 
-    float yaw;
-    float pitch;
-    float roll;
-    //M5.IMU.getAhrsData(&pitch, &roll, &yaw);
-    yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
-    roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    float fp = filter.filter(pitch);
-    if (isnan(fp)) display_error(2);
-    if (isnan(message.filtered_pitch)) display_error(3);
-    wing_diff = fp - message.filtered_pitch;
+    if (isnan(qe.accX)) {
+        Serial.print("Error 20\n");
+        return;
+    }
+    if (isnan(qe.accY)) {
+        Serial.print("Error 21\n");
+        return;
+    }
+    if (isnan(qe.accZ)) {
+        Serial.print("Error 22\n");
+        return;
+    }
+    float pitch = D180 * atan(qe.accX / sqrt(qe.accY * qe.accY + qe.accZ * qe.accZ)) / M_PI;
+    if (isnan(pitch)) {
+        display_error(2);
+        Serial.print("Error 2\n");
+        return;
+    }
+    float roll = D180 * atan(qe.accY / sqrt(qe.accX * qe.accX + qe.accZ * qe.accZ)) / M_PI;
+    if (isnan(roll)) {
+        Serial.print("Error 23\n");
+        return;
+    }
+    float fp = filter.AddValue(pitch);
+    if (isnan(fp)) {
+        display_error(3);
+        fp = pitch;
+        Serial.print("Error 3\n");
+    }
+    if (isnan(qe.other_msg.filtered_pitch)) {
+        display_error(4);
+        Serial.print("Error 4\n");
+    }
+    wing_diff = fp - qe.other_msg.filtered_pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     float dif = wing_diff - wing_diff_set;
     M5.Lcd.printf("%+03.3f    ", dif);
     if (do_sound) {
-        if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && message.roll > -ROL_TOLERANC &&
-            message.roll < ROL_TOLERANC) {
+        if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && qe.other_msg.roll > -ROL_TOLERANC &&
+            qe.other_msg.roll < ROL_TOLERANC) {
             Say(dif, WING_TOLERANCE);
         }
     }
@@ -94,10 +125,6 @@ void setup() {
         return;
     }
 
-    // Once ESPNow is successfully Init, we will register for recv CB to
-    // get recv packer info
-    esp_now_register_recv_cb(OnDataRecv);
-
     M5.IMU.Init();
     M5.IMU.setAccelFsr(M5.IMU.AFS_2G);  // MPU6886 sensor, ±2g
     M5.Lcd.fillScreen(BLACK);
@@ -117,9 +144,14 @@ void setup() {
     NVS.begin();
     //M5.Speaker.setVolume(1);  // todo -- doesn't work!
     wing_diff_set = get_pitch_diff_set();
+
+    esp_now_register_recv_cb(OnDataRecv);
 }
 
 void loop() {
+    while (!queue.isEmpty()) {
+        displayDate(queue.dequeue());
+    }
     M5.update();
     if (M5.BtnA.wasReleased()) {
         wing_diff_set = wing_diff;
@@ -137,5 +169,4 @@ void loop() {
     } else if (M5.BtnC.pressedFor(5000)) {
         M5.Power.deepSleep();
     }
-
 }
