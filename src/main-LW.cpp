@@ -4,7 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <SingleEMAFilterLib.h> // https://github.com/luisllamasbinaburo/Arduino-SingleEmaFilter
+#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include <esp_wifi.h>
 #include "common.h"
 
@@ -12,7 +12,7 @@
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
 
-SingleEMAFilter<float> filter(ALPHA);
+Ewma filter(ALPHA);
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
@@ -70,7 +70,7 @@ void loop() {
     message.yaw = calcYay(accX, accY, accZ);
     message.pitch = calcPitch(accX, accY, accZ);
     message.roll = calcPitch(accX, accY, accZ);
-    message.filtered_pitch = filter.AddValue(message.pitch);
+    message.filtered_pitch = filter.filter(message.pitch);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);
