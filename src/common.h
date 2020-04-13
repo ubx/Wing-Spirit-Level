@@ -15,10 +15,10 @@ typedef struct {
     float filtered_pitch;
 } struct_message;
 
-float calcYay(const float accX, const float accY, const float accZ);
+float calcYay(float accX, float accY, float accZ);
 
-float calcPitch(const float accX, const float accY, const float accZ);
+float calcPitch(float accX, float accY, float accZ);
 
-float calcRoll(const float accX, const float accY, const float accZ);
+float calcRoll(float accX, float accY, float accZ);
 
 #endif //WING_SPIRIT_LEVEL_MESSAGE_DIF_H

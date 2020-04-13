@@ -4,10 +4,10 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include <Queue.h> // https://github.com/EinarArnason/ArduinoQueue
+#include <ArduinoNvs.h>
+#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include "common.h"
-#include "ArduinoNvs.h"
 #include "audio.h"
 
 #define ROL_TOLERANC 30.0F
@@ -60,41 +60,9 @@ void displayDate(const queu_element &qe) {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", qe.accX, qe.accY, qe.accZ);
-
-    if (isnan(qe.accX)) {
-        Serial.print("Error 20\n");
-        return;
-    }
-    if (isnan(qe.accY)) {
-        Serial.print("Error 21\n");
-        return;
-    }
-    if (isnan(qe.accZ)) {
-        Serial.print("Error 22\n");
-        return;
-    }
-    float pitch = D180 * atan(qe.accX / sqrt(qe.accY * qe.accY + qe.accZ * qe.accZ)) / M_PI;
-    if (isnan(pitch)) {
-        display_error(2);
-        Serial.print("Error 2\n");
-        return;
-    }
-    float roll = D180 * atan(qe.accY / sqrt(qe.accX * qe.accX + qe.accZ * qe.accZ)) / M_PI;
-    if (isnan(roll)) {
-        Serial.print("Error 23\n");
-        return;
-    }
-    float fp = filter.filter(pitch);
-    if (isnan(fp)) {
-        display_error(3);
-        fp = pitch;
-        Serial.print("Error 3\n");
-    }
-    if (isnan(qe.other_msg.filtered_pitch)) {
-        display_error(4);
-        Serial.print("Error 4\n");
-    }
-    wing_diff = fp - qe.other_msg.filtered_pitch;
+    float pitch = calcRoll(qe.accX, qe.accY, qe.accZ);
+    float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
+    wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
     float dif = wing_diff - wing_diff_set;
