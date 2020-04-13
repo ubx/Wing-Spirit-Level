@@ -4,7 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <SingleEMAFilterLib.h> // https://github.com/luisllamasbinaburo/Arduino-SingleEmaFilter
+#include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include <Queue.h> // https://github.com/EinarArnason/ArduinoQueue
 #include "common.h"
 #include "ArduinoNvs.h"
@@ -84,7 +84,7 @@ void displayDate(const queu_element &qe) {
         Serial.print("Error 23\n");
         return;
     }
-    float fp = filter.AddValue(pitch);
+    float fp = filter.filter(pitch);
     if (isnan(fp)) {
         display_error(3);
         fp = pitch;
