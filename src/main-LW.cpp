@@ -5,7 +5,6 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <Ewma.h> // https://github.com/jonnieZG/EWMA
-#include <esp_wifi.h>
 #include "common.h"
 
 // REPLACE WITH YOUR RECEIVER MAC Address
