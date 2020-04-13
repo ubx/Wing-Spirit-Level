@@ -45,9 +45,7 @@ float get_pitch_diff_set() {
 float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
-SingleEMAFilter<float> filter(ALPHA);
-
-void displayDate(const queu_element &qe);
+Ewma filter(ALPHA);
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
@@ -108,6 +106,7 @@ void displayDate(const queu_element &qe) {
         }
     }
 }
+
 
 void setup() {
     // Initialize Serial Monitor
