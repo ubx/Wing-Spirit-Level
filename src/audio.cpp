@@ -34,7 +34,9 @@ void Say(const char *str) {
 
 void Say(float roll_diff, float roll_torerance) {
     if (abs(roll_diff) > 0.3) {
-        M5.Speaker.tone(1500 + (roll_diff / roll_torerance * 100), 10);
+        int d = roll_diff / roll_torerance;
+        d = min(max(d, -8), +8);
+        M5.Speaker.tone(1500 + d * 100, d > 0 ? 10 : 100);
     }
 }
 
