@@ -60,7 +60,7 @@ void displayDate(const queu_element &qe) {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", qe.accX, qe.accY, qe.accZ);
-    float pitch = calcRoll(qe.accX, qe.accY, qe.accZ);
+    float pitch = calcPitch(qe.accX, qe.accY, qe.accZ);
     float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
     wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
     M5.Lcd.setTextSize(8);
