@@ -69,7 +69,7 @@ void loop() {
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
     message.yaw = calcYay(accX, accY, accZ);
     message.pitch = calcPitch(accX, accY, accZ);
-    message.roll = calcPitch(accX, accY, accZ);
+    message.roll = calcRoll(accX, accY, accZ);
     message.filtered_pitch = filter.filter(message.pitch);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
