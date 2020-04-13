@@ -4,7 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Ewma.h> // https://github.com/jonnieZG/EWMA
+#include <SingleEMAFilterLib.h> // https://github.com/luisllamasbinaburo/Arduino-SingleEmaFilter
 #include <esp_wifi.h>
 #include "common.h"
 
@@ -12,7 +12,7 @@
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 struct_message message;
 
-Ewma filter(ALPHA);
+SingleEMAFilter<float> filter(ALPHA);
 
 // callback when data is sent
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
@@ -69,11 +69,10 @@ void loop() {
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
 
-    //M5.IMU.getAhrsData(&message.pitch, &message.roll, &message.yaw);
-    message.yaw = D180 * std::atan(accZ / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.pitch = D180 * std::atan(accX / std::sqrt(accY * accY + accZ * accZ)) / M_PI;
-    message.roll = D180 * std::atan(accY / std::sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.filtered_pitch = filter.filter(message.pitch);
+    message.yaw = D180 * atan(accZ / sqrt(accX * accX + accZ * accZ)) / M_PI;
+    message.pitch = D180 * atan(accX / sqrt(accY * accY + accZ * accZ)) / M_PI;
+    message.roll = D180 * atan(accY / sqrt(accX * accX + accZ * accZ)) / M_PI;
+    message.filtered_pitch = filter.AddValue(message.pitch);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
     M5.Lcd.setCursor(0, 100);
