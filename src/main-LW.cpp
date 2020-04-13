@@ -65,13 +65,11 @@ void loop() {
     float accY;
     float accZ;
     M5.IMU.getAccelData(&accX, &accY, &accZ);
-
     M5.Lcd.setCursor(0, 50);
     M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", accX, accY, accZ);
-
-    message.yaw = D180 * atan(accZ / sqrt(accX * accX + accZ * accZ)) / M_PI;
-    message.pitch = D180 * atan(accX / sqrt(accY * accY + accZ * accZ)) / M_PI;
-    message.roll = D180 * atan(accY / sqrt(accX * accX + accZ * accZ)) / M_PI;
+    message.yaw = calcYay(accX, accY, accZ);
+    message.pitch = calcPitch(accX, accY, accZ);
+    message.roll = calcPitch(accX, accY, accZ);
     message.filtered_pitch = filter.AddValue(message.pitch);
     M5.Lcd.setCursor(0, 80);
     M5.Lcd.printf("yaw:   % 5.2f", message.yaw);
