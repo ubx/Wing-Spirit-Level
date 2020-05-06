@@ -4,7 +4,7 @@
 #include <M5Stack.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <Queue.h> // https://github.com/EinarArnason/ArduinoQueue
+#include <ArduinoQueue.h> // https://github.com/EinarArnason/ArduinoQueue
 #include <ArduinoNvs.h>
 #include <Ewma.h> // https://github.com/jonnieZG/EWMA
 #include "common.h"
@@ -19,7 +19,7 @@ typedef struct {
     float accY;
     float accZ;
 } queu_element;
-DataQueue<queu_element> queue(2);
+ArduinoQueue<queu_element> queue(2);
 
 bool do_sound = true;
 
