@@ -65,12 +65,12 @@ void displayDate(const queu_element &qe) {
     wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
-    float dif = wing_diff - wing_diff_set;
-    M5.Lcd.printf("%+03.3f    ", dif);
+    float diff = wing_diff - wing_diff_set;
+    M5.Lcd.printf("%+03.3f    ", diff);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && qe.other_msg.roll > -ROL_TOLERANC &&
             qe.other_msg.roll < ROL_TOLERANC) {
-            Say(dif, WING_TOLERANCE);
+            Say(diff, WING_TOLERANCE);
         }
     }
 }
@@ -109,7 +109,7 @@ void setup() {
     M5.Lcd.setBrightness(50);
 
     NVS.begin();
-    //M5.Speaker.setVolume(1);  // todo -- doesn't work!
+    M5.Speaker.setVolume(8);
     wing_diff_set = get_pitch_diff_set();
 
     esp_now_register_recv_cb(OnDataRecv);
@@ -136,4 +136,5 @@ void loop() {
     } else if (M5.BtnC.pressedFor(5000)) {
         M5.Power.deepSleep();
     }
+    delay(20);
 }
