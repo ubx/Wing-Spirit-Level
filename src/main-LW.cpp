@@ -20,8 +20,10 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 void setup() {
+#ifdef DEBUG
+    // Initialize Serial Monitor
     Serial.begin(115200);
-
+#endif
     M5.begin();
     M5.Power.begin();
 

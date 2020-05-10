@@ -57,15 +57,19 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 }
 
 void displayDate(const queu_element &qe) {
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setCursor(0, 50);
-    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", qe.accX, qe.accY, qe.accZ);
     float pitch = calcPitch(qe.accX, qe.accY, qe.accZ);
     float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
     wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
+    float diff = wing_diff - wing_diff_set;
+#ifdef DEBUG
+    Serial.printf("pitch= %01.3f  other pitch=%01.3f  diff_set=%01.3f\n", pitch, qe.other_msg.filtered_pitch,
+                  wing_diff_set);
+#endif
+    M5.Lcd.setTextSize(2);
+    M5.Lcd.setCursor(0, 50);
+    M5.Lcd.printf(" % 01.3f   % 01.3f   % 01.3f", qe.accX, qe.accY, qe.accZ);
     M5.Lcd.setTextSize(8);
     M5.Lcd.setCursor(20, 100);
-    float diff = wing_diff - wing_diff_set;
     M5.Lcd.printf("%+03.3f    ", diff);
     if (do_sound) {
         if (roll > -ROL_TOLERANC && roll < ROL_TOLERANC && qe.other_msg.roll > -ROL_TOLERANC &&
@@ -77,9 +81,10 @@ void displayDate(const queu_element &qe) {
 
 
 void setup() {
+#ifdef DEBUG
     // Initialize Serial Monitor
     Serial.begin(115200);
-
+#endif
     M5.begin();
     M5.Power.begin();
 
