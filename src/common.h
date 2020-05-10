@@ -8,6 +8,8 @@
 #define D180 180.0
 #define ALPHA 0.4
 
+#define DEBUG
+
 typedef struct {
     float pitch;
     float roll;
