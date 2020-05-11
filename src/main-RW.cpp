@@ -61,7 +61,7 @@ void displayDate(const queu_element &qe) {
     float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
     wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
     float diff = wing_diff - wing_diff_set;
-#ifdef DEBUG
+#ifdef SERIAL_OUT
     Serial.printf("pitch= %01.3f  other pitch=%01.3f  diff_set=%01.3f\n", pitch, qe.other_msg.filtered_pitch,
                   wing_diff_set);
 #endif
@@ -81,7 +81,7 @@ void displayDate(const queu_element &qe) {
 
 
 void setup() {
-#ifdef DEBUG
+#ifdef SERIAL_OUT
     // Initialize Serial Monitor
     Serial.begin(115200);
 #endif
