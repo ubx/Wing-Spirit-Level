@@ -1,4 +1,4 @@
-#define M5STACK_200Q
+#define M5STACK_MPU6886
 
 #include <Arduino.h>
 #include <M5Stack.h>
