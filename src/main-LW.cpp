@@ -89,7 +89,7 @@ void loop() {
 
     M5.update();
     if (M5.BtnC.pressedFor(5000)) {
-        M5.Power.deepSleep();
+        M5.Power.powerOFF();
     }
 
     delay(250);

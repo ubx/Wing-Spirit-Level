@@ -139,7 +139,7 @@ void loop() {
         M5.Lcd.print(do_sound ? "S-OFF" : "S-ON ");
         Say();
     } else if (M5.BtnC.pressedFor(5000)) {
-        M5.Power.deepSleep();
+        M5.Power.powerOFF();
     }
     delay(20);
 }
