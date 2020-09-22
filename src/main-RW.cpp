@@ -46,6 +46,7 @@ float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
 
 Ewma filter(ALPHA);
+Ewma filterDiff(ALPHA_DIFF);
 
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
@@ -59,7 +60,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 void displayDate(const queu_element &qe) {
     float pitch = calcPitch(qe.accX, qe.accY, qe.accZ);
     float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
-    wing_diff = filter.filter(pitch) - qe.other_msg.filtered_pitch;
+    wing_diff = filterDiff.filter(filter.filter(pitch) - qe.other_msg.filtered_pitch);
     float diff = wing_diff - wing_diff_set;
 #ifdef SERIAL_OUT
     Serial.printf("pitch= %01.3f  other pitch=%01.3f  diff_set=%01.3f\n", pitch, qe.other_msg.filtered_pitch,

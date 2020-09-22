@@ -5,8 +5,8 @@
 #ifndef WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 #define WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 
-#define D180 180.0
 #define ALPHA 0.4
+#define ALPHA_DIFF 0.05
 
 typedef struct {
     float pitch;
