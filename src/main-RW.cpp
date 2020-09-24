@@ -19,8 +19,9 @@ typedef struct {
     float accY;
     float accZ;
 } queu_element;
+const char *const OFFSET = "offset";
+const char *const PITCH = "pitch";
 ArduinoQueue<queu_element> queue(2);
-
 bool do_sound = true;
 
 void display_error(int e_num) {
@@ -30,11 +31,15 @@ void display_error(int e_num) {
 }
 
 void set_pitch_diff_set(float val) {
-    if (!NVS.setFloat("pitch", val)) display_error(1);
+    if (!NVS.setFloat(PITCH, val)) display_error(1);
+}
+
+void set_pitch_diff_offset(float val) {
+    if (!NVS.setFloat(OFFSET, val)) display_error(1);
 }
 
 float get_pitch_diff_set() {
-    float val = NVS.getFloat("pitch");
+    float val = NVS.getFloat(PITCH);
     if (val == 0) {
         val = 0.0F;
         set_pitch_diff_set(val);
@@ -42,8 +47,18 @@ float get_pitch_diff_set() {
     return val;
 }
 
+float get_pitch_diff_offset() {
+    float val = NVS.getFloat(OFFSET);
+    if (val == 0) {
+        val = 0.0F;
+        set_pitch_diff_offset(val);
+    }
+    return val;
+}
+
 float wing_diff = 0.0F;
 float wing_diff_set = 0.0F;
+float wing_diff_offset = 0.0F;
 
 Ewma filter(ALPHA);
 Ewma filterDiff(ALPHA_DIFF);
@@ -58,13 +73,16 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 }
 
 void displayDate(const queu_element &qe) {
+    if (qe.other_msg.powr_off) {
+        M5.Power.powerOFF();
+    }
     float pitch = calcPitch(qe.accX, qe.accY, qe.accZ);
     float roll = calcRoll(qe.accX, qe.accY, qe.accZ);
     wing_diff = filterDiff.filter(filter.filter(pitch) - qe.other_msg.filtered_pitch);
-    float diff = wing_diff - wing_diff_set;
+    float diff = wing_diff - wing_diff_set + wing_diff_offset;
 #ifdef SERIAL_OUT
-    Serial.printf("pitch= %01.3f  other pitch=%01.3f  diff_set=%01.3f\n", pitch, qe.other_msg.filtered_pitch,
-                  wing_diff_set);
+    Serial.printf("pitch= %01.3f  other pitch=%01.3f diff=%01.3f wing_diff=%01.3f wing_diff_set=%01.3f wing_diff_offset=%01.3f\n", pitch, qe.other_msg.filtered_pitch,
+                  diff, wing_diff, wing_diff_set, wing_diff_offset);
 #endif
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(0, 50);
@@ -108,15 +126,16 @@ void setup() {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setCursor(50, 220);
     M5.Lcd.print("SET");
-    M5.Lcd.setCursor(135, 220);
-    M5.Lcd.print(do_sound ? "S-OFF" : "S-ON");
     M5.Lcd.setCursor(240, 220);
-    M5.Lcd.print("OFF");
+    M5.Lcd.print(do_sound ? "S-OFF" : "S-ON");
+    M5.Lcd.setCursor(135, 220);
+    M5.Lcd.print("CAL");
     M5.Lcd.setBrightness(50);
 
     NVS.begin();
     M5.Speaker.setVolume(8);
     wing_diff_set = get_pitch_diff_set();
+    wing_diff_offset = get_pitch_diff_offset();
 
     esp_now_register_recv_cb(OnDataRecv);
 }
@@ -126,21 +145,22 @@ void loop() {
         displayDate(queue.dequeue());
     }
     M5.update();
-    if (M5.BtnA.wasReleased()) {
-        wing_diff_set = wing_diff;
+    if (M5.BtnA.pressedFor(2000)) {
+        wing_diff_set = wing_diff + wing_diff_offset;
         set_pitch_diff_set(wing_diff_set);
         Say();
-    } else if (M5.BtnA.pressedFor(10000)) { // reset to 0.0 !
-        set_pitch_diff_set(0.0F);
-        Say();
     } else if (M5.BtnB.wasReleased()) {
+        wing_diff_set - wing_diff_offset;
+        wing_diff_offset = 0.0F - wing_diff;
+        wing_diff_set + wing_diff_offset;
+        set_pitch_diff_offset(wing_diff_offset);
+        Say();
+    } else if (M5.BtnC.wasReleased()) {
         do_sound = !do_sound;
         M5.Lcd.setTextSize(2);
-        M5.Lcd.setCursor(135, 220);
+        M5.Lcd.setCursor(240, 220);
         M5.Lcd.print(do_sound ? "S-OFF" : "S-ON ");
         Say();
-    } else if (M5.BtnC.pressedFor(5000)) {
-        M5.Power.powerOFF();
     }
     delay(20);
 }

@@ -6,13 +6,14 @@
 #define WING_SPIRIT_LEVEL_MESSAGE_DIF_H
 
 #define ALPHA 0.4
-#define ALPHA_DIFF 0.05
+#define ALPHA_DIFF 0.1
 
 typedef struct {
     float pitch;
     float roll;
     float yaw;
     float filtered_pitch;
+    bool powr_off;
 } struct_message;
 
 float calcYay(float accX, float accY, float accZ);

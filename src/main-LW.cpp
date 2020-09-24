@@ -59,6 +59,7 @@ void setup() {
     M5.Lcd.setCursor(240, 220);
     M5.Lcd.print("OFF");
     M5.Lcd.setBrightness(50);
+    message.powr_off = false;
 }
 
 void loop() {
@@ -89,8 +90,10 @@ void loop() {
 
     M5.update();
     if (M5.BtnC.pressedFor(5000)) {
+        message.powr_off = true;
+        esp_now_send(broadcastAddress, (uint8_t *) &message, sizeof(message));
+        delay(100);
         M5.Power.powerOFF();
     }
-
     delay(250);
 }
